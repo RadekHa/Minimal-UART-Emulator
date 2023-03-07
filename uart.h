@@ -174,44 +174,44 @@ namespace UART
             // Add operation with carry in.
             int result = a + b + bool (Ctrl::get () & CinMask);
 
+            // zero flag
             if ((result & 0xff) == 0)
             {
-                mFlagLines |= 1;
+                Flag::Set (Flag::get () | 1);
             }
             else
             {
-                // zero flag
-                mFlagLines &= ~1;
+                Flag::Set (Flag::get () & ~1);
             }
 
+            // carry flag
             if (result > 0xff)
             {
-                mFlagLines |= 2;
+                Flag::Set (Flag::get () | 2);
             }
             else
             {
-                // carry flag
-                mFlagLines &= ~2;
+                Flag::Set (Flag::get () & ~2);
             }
 
+            // Negative flag.
             if (result & 0x80)
             {
-                mFlagLines |= 4;
+                Flag::Set (Flag::get () | 4);
             }
             else
             {
-                // Negative flag.
-                mFlagLines &= ~4;
+                Flag::Set (Flag::get () & ~4);
             }
 
-            if (mCtrlLines & mOutMask)
+            if (Ctrl::get () & OutMask)
             {
                 // Output result if EO is active.
                 Port::set (uint8_t (result));
             }
         }
 
-        // 74HC283 works asynchroneous, use "EO|AI, EO|RI" instead of "EO|AI|RI" (same for BI)
+        // 74HC283 works asynchronous, use "EO|AI, EO|RI" instead of "EO|AI|RI" (same for BI)
         static void gettingHigh ()
         {
             beingLow ();
