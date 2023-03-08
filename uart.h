@@ -1,3 +1,9 @@
+#pragma once
+
+#include <array>
+#include <iostream>
+#include <filesystem>
+
 namespace UART
 {
     // Definition of control lines within control word.
@@ -156,7 +162,6 @@ namespace UART
     class Adder
     {
     public:
-
         static void beingLow ()
         {
             // A and B registers
@@ -219,4 +224,90 @@ namespace UART
     };
 
     using Alu = Adder<BusLine, CtrlLine, Flags::EOFI, Flags::ES, Flags::EC, AReg, BReg, FlagLine>;
+
+    class InputBuffer
+    {
+    public:
+        static bool isValue ()
+        {
+            return m_dataPresent;
+        }
+
+        static char pop ()
+        {
+            m_dataPresent = false;
+            return m_data;
+        }
+
+        static char m_data;
+        static bool m_dataPresent;
+    };
+
+    char InputBuffer::m_data = 0;
+    bool InputBuffer::m_dataPresent = false;
+
+
+    template<class Port, class Ctrl, Flags InMask, Flags OutMask, class Mar, class InBuf, unsigned int size = 32768>
+    class Memory
+    {
+    public:
+
+        static void init (const std::filesystem::path& romName)
+        {
+            std::ifstream rom (romName, std::ios::binary | std::ios::in);
+
+            if (rom)
+            {
+                rom.read (m_data.data (), 0x2000);
+            }
+        }
+
+        static void beingLow ()
+        {
+            if ((Ctrl::get () & OutMask))
+            {
+                // Terminal -> Port
+                if (Mar::get () & 0x8000)
+                {
+                    if (InBuf::isValue ())
+                    {
+                        Port::set (InBuf::pop ());
+                    }
+                    else
+                    {
+                        Port::reset ();
+                    }
+                }
+                else
+                {
+                    // RAM -> Port
+                    Port::set (m_data [Mar::get ()]);
+                }
+            }
+        }
+
+        static void beingHigh ()
+        {
+            if ((Ctrl::get () & InMask))
+            {
+                if (((Mar::get () & 0x8000) == 0x8000) && (Port::get () != 0))
+                {
+                    // 0x8000-0xffff: schreiben in UART
+                    std::cout << Port::get ();
+                }
+                else if (Mar::get () >= 0x2000)
+                {
+                    // 0x2000-0x7fff: RAM, do not overwrite ROM 0x0000-0x1fff																																			// 0x0000-0x7fff: schreiben in RAM
+                    m_data [Mar::get ()] = Port::get ();
+                }
+            }
+        }
+
+        static std::array<char, size> m_data;
+    };
+
+    template<class Port, class Ctrl, Flags InMask, Flags OutMask, class Mar, class InBuf, unsigned int size>
+    std::array<char, size> Memory<Port, Ctrl, InMask, OutMask, Mar, InBuf, size>::m_data;
+
+    using Mem = Memory<BusLine, CtrlLine, Flags::RI, Flags::RO, Mar, InputBuffer>;
 }
