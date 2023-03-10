@@ -7,7 +7,10 @@ project(USART
 
 add_executable(emulator)
 
-target_sources(emulator PUBLIC main.cpp)
+target_sources(emulator PUBLIC
+   main.cpp
+   Component.cpp
+)
 
 target_compile_features(emulator PRIVATE cxx_std_20)
 

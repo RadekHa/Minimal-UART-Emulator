@@ -9,8 +9,6 @@
 #include <vector>
 #include <fstream>
 
-#include "uart.h"
-
 #define BO          0b0000000000000001          // definition of control lines within control word
 #define BI          0b0000000000000010
 #define AO          0b0000000000000100
@@ -58,7 +56,8 @@ public:
     }
 };
 
-class Register : public Component               // modeled after 74LS161 / 74HC161 (4-Bit Counter) bzw. 74HC173 (4-Bit Register Latch)
+// modeled after 74LS161 / 74HC161 (4-Bit Counter) bzw. 74HC173 (4-Bit Register Latch)
+class Register : public Component
 {
 public:
     Register (uint8_t& port, uint16_t& ctrl, uint16_t inmask, uint16_t outmask, uint16_t countmask, uint16_t himask)
@@ -281,9 +280,9 @@ public:
         {
             for (int i = 0; i < 0x2000; i++)
             {
-                lsb.read ((char*) &mMicrocode [i] + 0, 1);
-                msb.read ((char*) &mMicrocode [i] + 1, 1);
-                mMicrocode [i] ^= ACTLOW;
+                lsb.read ((char*) &m_microcode [i] + 0, 1);
+                msb.read ((char*) &m_microcode [i] + 1, 1);
+                m_microcode [i] ^= ACTLOW;
             }
         }
     }
@@ -291,15 +290,15 @@ public:
     void FallingEdge ()                      // set the control lines according to flags, instruction & step
     {
         mCtrlLines =
-            mMicrocode [((mRegFlags->Get () & 0b111) << 10) | ((mRegInstr->Get () & 0b111111) << 4) |
-                        (mRegSteps->Get () & 0b1111)];
+            m_microcode [((mRegFlags->Get () & 0b111) << 10) | ((mRegInstr->Get () & 0b111111) << 4) |
+                         (mRegSteps->Get () & 0b1111)];
 
         if (mCtrlLines & IC)                // immediate asnychroneous reset
         {
             mRegSteps->Reset ();
             mCtrlLines =
-                mMicrocode [((mRegFlags->Get () & 0b111) << 10) | ((mRegInstr->Get () & 0b111111) << 4) |
-                            (mRegSteps->Get () & 0b1111)];
+                m_microcode [((mRegFlags->Get () & 0b111) << 10) | ((mRegInstr->Get () & 0b111111) << 4) |
+                             (mRegSteps->Get () & 0b1111)];
         }
 
         if (mCtrlLines & HI)
@@ -316,7 +315,7 @@ private:
     uint8_t& mPortLines;                                    // reference to the IO lines the component is connected to
     uint16_t& mCtrlLines;                                   // reference to the control word
     std::shared_ptr<Register> mRegInstr, mRegFlags, mRegSteps;
-    uint16_t mMicrocode [8192];
+    uint16_t m_microcode [8192];
 };
 
 class Computer
@@ -419,9 +418,6 @@ protected:
 int main ()
 {
     SetConsoleMode (GetStdHandle (STD_OUTPUT_HANDLE), 0b111);     // enable ANSI control sequences in WINDOWS console
-
-    UART::AReg::reset ();
-    UART::AReg::beingLow ();
 
 
     Computer cpu;
