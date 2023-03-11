@@ -109,6 +109,10 @@ namespace UART
         {
         }
 
+        virtual void reset () override
+        {
+        }
+
         virtual void fallingEdge ()  override
         {
         }
@@ -216,6 +220,10 @@ namespace UART
             }
         }
 
+        virtual void reset () override
+        {
+        }
+
         virtual void fallingEdge ()  override
         {
         }
@@ -291,6 +299,7 @@ namespace UART
 
         void init (const std::filesystem::path& lsbName, const std::filesystem::path& msbName);
 
+        virtual void reset () override;
         virtual void fallingEdge ()  override;
         virtual void beingLow ()  override;
         virtual void risingEdge ()  override;

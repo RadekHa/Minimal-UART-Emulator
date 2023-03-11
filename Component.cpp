@@ -9,46 +9,46 @@ using namespace UART;
 ///////////////////////////////////////////////////////////////////////////////
 // Factory functions.
 
-IRegister* UART::createRegisterA (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegA (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance = make_unique<Register<CtrlFlags::AI, CtrlFlags::AO, CtrlFlags::Null, CtrlFlags::Null> > (port, ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterB (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegB (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance = make_unique<Register<CtrlFlags::BI, CtrlFlags::BO, CtrlFlags::Null, CtrlFlags::Null> > (port, ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterI (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegInstr (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance =
         make_unique<Register<CtrlFlags::II, CtrlFlags::Null, CtrlFlags::Null, CtrlFlags::Null> > (port, ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterF (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegFlags (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance = make_unique<Register<CtrlFlags::EOFI, CtrlFlags::Null, CtrlFlags::Null, CtrlFlags::Null> > (port,
                                                                                                                 ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterS (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegSteps (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance =
         make_unique<Register<CtrlFlags::EOFI, CtrlFlags::AO, CtrlFlags::All, CtrlFlags::Null> > (port, ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterPC (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegPC (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance = make_unique<Register<CtrlFlags::CI, CtrlFlags::CO, CtrlFlags::CEME, CtrlFlags::HI> > (port, ctrl);
     return instance.release ();
 }
 
-IRegister* UART::createRegisterMar (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegMar (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance = make_unique<Register<CtrlFlags::MI, CtrlFlags::Null, CtrlFlags::CEME, CtrlFlags::HI> > (port, ctrl);
     return instance.release ();
@@ -56,15 +56,11 @@ IRegister* UART::createRegisterMar (PortLine* port, const CtrlLine* ctrl)
 
 IComponent* UART::createAlu (PortLine* port,
                              const CtrlLine* ctrl,
-                             const IRegister* registerA,
-                             const IRegister* registerB,
+                             const IRegister* regA,
+                             const IRegister* regB,
                              FlagLine* flags)
 {
-    auto instance = make_unique<Alu<CtrlFlags::EOFI, CtrlFlags::ES, CtrlFlags::EC> > (port,
-                                                                                      ctrl,
-                                                                                      registerA,
-                                                                                      registerB,
-                                                                                      flags);
+    auto instance = make_unique<Alu<CtrlFlags::EOFI, CtrlFlags::ES, CtrlFlags::EC> > (port, ctrl, regA, regB, flags);
     return instance.release ();
 }
 
@@ -121,6 +117,10 @@ void Control::init (const fs::path& lsbName, const fs::path& msbName)
     {
         throw invalid_argument{"Control files not found!"};
     }
+}
+
+void Control::reset ()
+{
 }
 
 void Control::fallingEdge ()

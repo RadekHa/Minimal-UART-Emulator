@@ -37,6 +37,7 @@ namespace UART
         /** Virtual interface destructor. */
         virtual ~IComponent () = default;
 
+        virtual void reset () = 0;
         virtual void fallingEdge () = 0;
         virtual void beingLow () = 0;
         virtual void risingEdge () = 0;
@@ -51,7 +52,6 @@ namespace UART
         virtual ~IRegister () = default;
 
         virtual uint16_t get () const = 0;
-        virtual void reset () = 0;
     };
 
     using PortLine = uint8_t;
@@ -59,18 +59,18 @@ namespace UART
     using FlagLine = uint8_t;
 
     /** Create register A component. */
-    IRegister* createRegisterA (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterB (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterI (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterF (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterS (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterPC (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegisterMar (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegA (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegB (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegInstr (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegFlags (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegSteps (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegPC (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegMar (PortLine* port, const CtrlLine* ctrl);
 
     IComponent* createAlu (PortLine* port,
                            const CtrlLine* ctrl,
-                           const IRegister* registerA,
-                           const IRegister* registerB,
+                           const IRegister* regA,
+                           const IRegister* regB,
                            FlagLine* flags);
 
     using InputBuffer = std::queue<uint8_t>;
