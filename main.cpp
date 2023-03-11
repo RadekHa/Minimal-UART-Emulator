@@ -2,12 +2,20 @@
 // Compile with g++ main.cpp -Os -s
 // Have fun!
 
+#include "IComponent.h"
+
 #include <iostream>                                         // console output
 #include <windows.h>                                        // simple windows timing
 #include <conio.h>                                          // keyboard input, ancient and non-portable :-)
 #include <memory>
 #include <vector>
 #include <fstream>
+
+#include <functional>
+#include <ranges>
+
+using namespace std;
+using namespace UART;
 
 #define BO          0b0000000000000001          // definition of control lines within control word
 #define BI          0b0000000000000010
@@ -415,6 +423,64 @@ protected:
     std::vector<std::shared_ptr<Component> > mComponents;
 };
 
+class Cpu
+{
+public:
+
+    void init ()
+    {
+        auto regA = createRegA (&m_portLine, &m_ctrlLine);
+        auto regB = createRegB (&m_portLine, &m_ctrlLine);
+        auto regInstr = createRegInstr (&m_portLine, &m_ctrlLine);
+        auto regFlags = createRegFlags (&m_portLine, &m_ctrlLine);
+        auto regSteps = createRegSteps (&m_portLine, &m_ctrlLine);
+        auto regPC = createRegPC (&m_portLine, &m_ctrlLine);
+        auto regMar = createRegMar (&m_portLine, &m_ctrlLine);
+
+        auto alu = createAlu (&m_portLine, &m_ctrlLine, regA, regB, &m_flagLine);
+        auto memory = createMemory (&m_portLine, &m_ctrlLine, regMar, &m_inputBuffer);
+        auto control = createControl (&m_portLine, &m_ctrlLine, regInstr, regFlags, regSteps);
+
+        m_components.emplace_back (regA);
+        m_components.emplace_back (regB);
+        m_components.emplace_back (regInstr);
+        m_components.emplace_back (regFlags);
+        m_components.emplace_back (regSteps);
+        m_components.emplace_back (regPC);
+        m_components.emplace_back (regMar);
+        m_components.emplace_back (alu);
+        m_components.emplace_back (memory);
+        m_components.emplace_back (control);
+    }
+
+    void handleInput (char c)
+    {
+        m_inputBuffer.push (c);
+    }
+
+    void reset ()
+    {
+        ranges::for_each (m_components, mem_fn (&IComponent::reset));
+        m_inputBuffer = InputBuffer ();
+    }
+
+    void update ()
+    {
+        ranges::for_each (m_components, mem_fn (&IComponent::fallingEdge));
+        ranges::for_each (m_components, mem_fn (&IComponent::beingLow));
+        ranges::for_each (m_components, mem_fn (&IComponent::risingEdge));
+        ranges::for_each (m_components, mem_fn (&IComponent::gettingHigh));
+        ranges::for_each (m_components, mem_fn (&IComponent::beingHigh));
+    }
+
+private:
+    InputBuffer m_inputBuffer;
+    PortLine m_portLine;
+    CtrlLine m_ctrlLine;
+    FlagLine m_flagLine;
+    vector<unique_ptr<IComponent> > m_components;
+};
+
 int main ()
 {
     SetConsoleMode (GetStdHandle (STD_OUTPUT_HANDLE), 0b111);     // enable ANSI control sequences in WINDOWS console
@@ -438,11 +504,11 @@ int main ()
                 {
                 case 79:
                     running = false;
-                    break;                                      // END
+                    break;                 // END
 
                 case 71:
                     cpu.Reset ();
-                    break;                                          // POS1 = Reset
+                    break;                 // POS1 = Reset
 
                 default:
                     break;
