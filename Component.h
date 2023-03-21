@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IComponent.h"
+#include "Tracing.h"
 
 #include <array>
 #include <filesystem>
@@ -69,7 +70,7 @@ namespace UART
                     m_data = (m_data & 0xff00) | *m_portLine;
                 }
             }
-            else if ((*m_ctrlLine & CountMask) || (CountMask == CtrlFlags::AI))
+            else if ((*m_ctrlLine & CountMask) || (CountMask == CtrlFlags::All))
             {
                 m_data++;
             }

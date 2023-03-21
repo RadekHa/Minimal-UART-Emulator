@@ -62,7 +62,7 @@ namespace UART
     IRegister* createRegA (PortLine* port, const CtrlLine* ctrl);
     IRegister* createRegB (PortLine* port, const CtrlLine* ctrl);
     IRegister* createRegInstr (PortLine* port, const CtrlLine* ctrl);
-    IRegister* createRegFlags (PortLine* port, const CtrlLine* ctrl);
+    IRegister* createRegFlags (FlagLine* flags, const CtrlLine* ctrl);
     IRegister* createRegSteps (PortLine* port, const CtrlLine* ctrl);
     IRegister* createRegPC (PortLine* port, const CtrlLine* ctrl);
     IRegister* createRegMar (PortLine* port, const CtrlLine* ctrl);

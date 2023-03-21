@@ -28,9 +28,9 @@ IRegister* UART::createRegInstr (PortLine* port, const CtrlLine* ctrl)
     return instance.release ();
 }
 
-IRegister* UART::createRegFlags (PortLine* port, const CtrlLine* ctrl)
+IRegister* UART::createRegFlags (FlagLine* flags, const CtrlLine* ctrl)
 {
-    auto instance = make_unique<Register<CtrlFlags::EOFI, CtrlFlags::Null, CtrlFlags::Null, CtrlFlags::Null> > (port,
+    auto instance = make_unique<Register<CtrlFlags::EOFI, CtrlFlags::Null, CtrlFlags::Null, CtrlFlags::Null> > (flags,
                                                                                                                 ctrl);
     return instance.release ();
 }
@@ -38,7 +38,7 @@ IRegister* UART::createRegFlags (PortLine* port, const CtrlLine* ctrl)
 IRegister* UART::createRegSteps (PortLine* port, const CtrlLine* ctrl)
 {
     auto instance =
-        make_unique<Register<CtrlFlags::EOFI, CtrlFlags::AO, CtrlFlags::All, CtrlFlags::Null> > (port, ctrl);
+        make_unique<Register<CtrlFlags::Null, CtrlFlags::Null, CtrlFlags::All, CtrlFlags::Null> > (port, ctrl);
     return instance.release ();
 }
 
@@ -125,11 +125,12 @@ void Control::reset ()
 
 void Control::fallingEdge ()
 {
-    *m_ctrlLine =
-        m_microcode [((m_regFlags->get () & 0b111) << 10) | ((m_regInstr->get () & 0b111111) << 4) |
-                     (m_regSteps->get () & 0b1111)];
+    const auto index = ((m_regFlags->get () & 0b111) << 10) | ((m_regInstr->get () & 0b111111) << 4) |
+                       (m_regSteps->get () & 0b1111);
 
-    // immediate asnychroneous reset
+    *m_ctrlLine = m_microcode [index];
+
+    // Immediate asynchronous reset.
     if (*m_ctrlLine & CtrlFlags::IC)
     {
         m_regSteps->reset ();
